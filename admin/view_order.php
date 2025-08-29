@@ -35,13 +35,11 @@ if ($_POST && isset($_POST['update_status'])) {
     }
 }
 
-// Get order details with customer and address info
+// Get order details with customer info
 $order = $db->fetchOne(
-    "SELECT o.*, u.first_name, u.last_name, u.email, u.phone,
-     sa.address_line_1, sa.address_line_2, sa.city, sa.state, sa.postal_code, sa.country
+    "SELECT o.*, u.first_name, u.last_name, u.email, u.phone
      FROM orders o 
      JOIN users u ON o.user_id = u.id
-     LEFT JOIN shipping_addresses sa ON o.shipping_address_id = sa.id
      WHERE o.id = ?",
     [$orderId]
 );
@@ -61,6 +59,12 @@ $orderItems = $db->fetchAll(
      ORDER BY oi.id",
     [$orderId]
 );
+
+// Calculate subtotal from order items
+$subtotal = 0;
+foreach ($orderItems as $item) {
+    $subtotal += $item['price'] * $item['quantity'];
+}
 
 $pageTitle = 'Order #' . $order['order_number'];
 ?>
@@ -98,6 +102,10 @@ $pageTitle = 'Order #' . $order['order_number'];
         .item-name { font-weight: 600; margin-bottom: 4px; }
         .item-info { color: #6b7280; font-size: 14px; }
         .item-price { text-align: right; font-weight: 600; }
+        .alert { padding: 12px 16px; margin-bottom: 16px; border-radius: 6px; border: 1px solid transparent; }
+        .alert-success { background-color: #d1fae5; border-color: #a7f3d0; color: #065f46; }
+        .alert-error { background-color: #fee2e2; border-color: #fca5a5; color: #dc2626; }
+        .alert-info { background-color: #dbeafe; border-color: #93c5fd; color: #1e40af; }
     </style>
 </head>
 <body>
@@ -191,16 +199,11 @@ $pageTitle = 'Order #' . $order['order_number'];
         </div>
         
         <!-- Shipping Address -->
-        <?php if ($order['address_line_1']): ?>
+        <?php if ($order['shipping_address']): ?>
         <div class="order-section">
             <h3>Shipping Address</h3>
-            <div style="line-height: 1.6;">
-                <?php echo sanitizeInput($order['address_line_1']); ?><br>
-                <?php if ($order['address_line_2']): ?>
-                    <?php echo sanitizeInput($order['address_line_2']); ?><br>
-                <?php endif; ?>
-                <?php echo sanitizeInput($order['city']); ?>, <?php echo sanitizeInput($order['state']); ?> <?php echo sanitizeInput($order['postal_code']); ?><br>
-                <?php echo sanitizeInput($order['country']); ?>
+            <div style="line-height: 1.6; background: #f9fafb; padding: 12px; border-radius: 6px;">
+                <?php echo nl2br(sanitizeInput($order['shipping_address'])); ?>
             </div>
             
             <?php if ($order['shipping_cost'] > 0): ?>
@@ -241,7 +244,7 @@ $pageTitle = 'Order #' . $order['order_number'];
                 <div style="border-top: 2px solid #e5e7eb; padding-top: 16px; margin-top: 16px;">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                         <span>Subtotal:</span>
-                        <span><?php echo formatPrice($order['subtotal']); ?></span>
+                        <span><?php echo formatPrice($subtotal); ?></span>
                     </div>
                     <?php if ($order['tax_amount'] > 0): ?>
                     <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">

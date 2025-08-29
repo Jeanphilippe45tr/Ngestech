@@ -1,20 +1,135 @@
 <?php
+// Start session first
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 require_once '../includes/config.php';
 require_once '../includes/functions.php';
 
-requireAdmin();
+// Check admin access
+if (!isAdmin()) {
+    header('Location: ../login.php');
+    exit;
+}
 
-$db = Database::getInstance();
+try {
+    $db = Database::getInstance();
+} catch (Exception $e) {
+    die("Database connection failed: " . $e->getMessage());
+}
 
 // Handle product actions
 if ($_POST) {
+    // Handle bulk actions
+    if (isset($_POST['bulk_action']) && isset($_POST['selected_products'])) {
+        $action = $_POST['bulk_action'];
+        $selectedProducts = $_POST['selected_products'];
+        $count = 0;
+        
+        foreach ($selectedProducts as $productId) {
+            $productId = (int)$productId;
+            if ($productId <= 0) continue;
+            
+            try {
+                switch ($action) {
+                    case 'delete':
+                        // Check if product has related order items
+                        $orderItems = $db->fetchColumn(
+                            "SELECT COUNT(*) FROM order_items WHERE product_id = ?",
+                            [$productId]
+                        );
+                        
+                        if ($orderItems > 0) {
+                            // Mark as discontinued instead
+                            $db->update('products', [
+                                'status' => 'discontinued',
+                                'updated_at' => date('Y-m-d H:i:s')
+                            ], 'id = ?', [$productId]);
+                        } else {
+                            // Safe to delete
+                            $product = $db->fetchOne("SELECT main_image FROM products WHERE id = ?", [$productId]);
+                            if ($product && $product['main_image']) {
+                                $imagePath = "../uploads/products/" . $product['main_image'];
+                                if (file_exists($imagePath)) {
+                                    unlink($imagePath);
+                                }
+                            }
+                            $db->delete('cart', 'product_id = ?', [$productId]);
+                            $db->delete('wishlist', 'product_id = ?', [$productId]);
+                            $db->delete('product_images', 'product_id = ?', [$productId]);
+                            $db->delete('products', 'id = ?', [$productId]);
+                        }
+                        break;
+                    case 'activate':
+                        $db->update('products', ['status' => 'active'], 'id = ?', [$productId]);
+                        break;
+                    case 'deactivate':
+                        $db->update('products', ['status' => 'inactive'], 'id = ?', [$productId]);
+                        break;
+                    case 'feature':
+                        $db->update('products', ['featured' => 1], 'id = ?', [$productId]);
+                        break;
+                    case 'unfeature':
+                        $db->update('products', ['featured' => 0], 'id = ?', [$productId]);
+                        break;
+                }
+                $count++;
+            } catch (Exception $e) {
+                // Continue with other products
+            }
+        }
+        
+        if ($count > 0) {
+            $actionText = ucfirst(str_replace('_', ' ', $action));
+            showMessage("{$actionText} applied to {$count} product(s) successfully!", 'success');
+        } else {
+            showMessage('No products were processed.', 'error');
+        }
+    }
+    
     if (isset($_POST['delete_product'])) {
         $productId = (int)$_POST['product_id'];
         try {
-            $db->delete('products', 'id = ?', [$productId]);
-            showMessage('Product deleted successfully!', 'success');
+            // Check if product has related order items
+            $orderItems = $db->fetchColumn(
+                "SELECT COUNT(*) FROM order_items WHERE product_id = ?",
+                [$productId]
+            );
+            
+            if ($orderItems > 0) {
+                // Don't delete, just mark as discontinued
+                $db->update('products', [
+                    'status' => 'discontinued',
+                    'updated_at' => date('Y-m-d H:i:s')
+                ], 'id = ?', [$productId]);
+                showMessage('Product marked as discontinued (cannot delete as it has order history).', 'info');
+            } else {
+                // Safe to delete - no order history
+                // First delete the product image if it exists
+                $product = $db->fetchOne("SELECT main_image FROM products WHERE id = ?", [$productId]);
+                if ($product && $product['main_image']) {
+                    $imagePath = "../uploads/products/" . $product['main_image'];
+                    if (file_exists($imagePath)) {
+                        unlink($imagePath);
+                    }
+                }
+                
+                // Delete from cart if any
+                $db->delete('cart', 'product_id = ?', [$productId]);
+                
+                // Delete from wishlist if any
+                $db->delete('wishlist', 'product_id = ?', [$productId]);
+                
+                // Delete product images if any
+                $db->delete('product_images', 'product_id = ?', [$productId]);
+                
+                // Finally delete the product
+                $db->delete('products', 'id = ?', [$productId]);
+                showMessage('Product deleted successfully!', 'success');
+            }
         } catch (Exception $e) {
-            showMessage('Error deleting product: ' . $e->getMessage(), 'error');
+            showMessage('Error processing product deletion: ' . $e->getMessage(), 'error');
         }
     }
     

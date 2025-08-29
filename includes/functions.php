@@ -284,8 +284,16 @@ function formatWeight($weight) {
 }
 
 function getProductImageUrl($imagePath) {
-    if ($imagePath && file_exists($imagePath)) {
-        return SITE_URL . '/' . $imagePath;
+    if ($imagePath && !empty(trim($imagePath))) {
+        // If it's just a filename, assume it's in uploads/products/
+        if (strpos($imagePath, '/') === false) {
+            $webPath = 'uploads/products/' . $imagePath;
+        } else {
+            $webPath = $imagePath;
+        }
+        
+        // Always return the URL - let the browser handle whether it exists or not
+        return SITE_URL . '/' . $webPath;
     }
     return SITE_URL . '/images/no-image.jpg';
 }
@@ -328,6 +336,83 @@ function sendEmail($to, $subject, $message, $headers = null) {
 }
 
 // File upload function
+function handleImageUpload($file, $folder = 'products') {
+    try {
+        $uploadDir = '../uploads/' . $folder . '/';
+        
+        // Ensure upload directory exists
+        if (!is_dir($uploadDir)) {
+            if (!mkdir($uploadDir, 0777, true)) {
+                return ['success' => false, 'error' => 'Failed to create upload directory'];
+            }
+        }
+        
+        // Validate input
+        if (!isset($file['error']) || is_array($file['error'])) {
+            return ['success' => false, 'error' => 'Invalid file upload'];
+        }
+        
+        $allowedTypes = ALLOWED_IMAGE_TYPES;
+        $maxSize = MAX_FILE_SIZE;
+        
+        $fileName = $file['name'];
+        $fileSize = $file['size'];
+        $fileTmp = $file['tmp_name'];
+        $fileError = $file['error'];
+        
+        $fileExt = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+        
+        // Check for upload errors
+        switch ($fileError) {
+            case UPLOAD_ERR_OK:
+                break;
+            case UPLOAD_ERR_NO_FILE:
+                return ['success' => false, 'error' => 'No file was uploaded'];
+            case UPLOAD_ERR_INI_SIZE:
+            case UPLOAD_ERR_FORM_SIZE:
+                return ['success' => false, 'error' => 'File is too large'];
+            default:
+                return ['success' => false, 'error' => 'Unknown upload error'];
+        }
+        
+        // Validate file size
+        if ($fileSize > $maxSize) {
+            return ['success' => false, 'error' => 'File too large. Maximum size: ' . round($maxSize / 1024 / 1024, 1) . 'MB'];
+        }
+        
+        // Validate file extension
+        if (!in_array($fileExt, $allowedTypes)) {
+            return ['success' => false, 'error' => 'Invalid file type. Allowed: ' . implode(', ', $allowedTypes)];
+        }
+        
+        // Basic image validation (check MIME type)
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mimeType = finfo_file($finfo, $fileTmp);
+        finfo_close($finfo);
+        
+        $allowedMimes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+        if (!in_array($mimeType, $allowedMimes)) {
+            return ['success' => false, 'error' => 'File is not a valid image'];
+        }
+        
+        // Generate unique filename
+        $newFileName = uniqid('img_') . '.' . $fileExt;
+        $destination = $uploadDir . $newFileName;
+        
+        // Move uploaded file
+        if (move_uploaded_file($fileTmp, $destination)) {
+            // Set proper permissions
+            chmod($destination, 0644);
+            return ['success' => true, 'filename' => $newFileName, 'path' => 'uploads/' . $folder . '/' . $newFileName];
+        }
+        
+        return ['success' => false, 'error' => 'Failed to move uploaded file'];
+        
+    } catch (Exception $e) {
+        return ['success' => false, 'error' => 'Upload error: ' . $e->getMessage()];
+    }
+}
+
 function uploadImage($file, $folder = 'products') {
     $uploadDir = UPLOAD_PATH . $folder . '/';
     

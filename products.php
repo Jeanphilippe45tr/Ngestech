@@ -44,7 +44,12 @@ $pageTitle = 'Products';
   <header class="header">
     <div class="container">
       <div class="main-header">
-        <div class="logo"><a href="index.php"><h1><i class="fas fa-anchor"></i> <?php echo SITE_NAME; ?></h1></a></div>
+        <div class="logo">
+          <a href="index.php">
+            <img src="logo1.png" alt="<?php echo SITE_NAME; ?>" style="height: 50px; width: auto;">
+            <h1><?php echo SITE_NAME; ?></h1>
+          </a>
+        </div>
         <div class="search-bar">
           <form action="products.php" method="GET" class="search-form">
             <input type="text" name="q" placeholder="Search..." value="<?php echo $q; ?>">
@@ -63,6 +68,8 @@ $pageTitle = 'Products';
         <ul class="nav-menu">
           <li><a href="index.php">Home</a></li>
           <li><a class="active" href="products.php">Products</a></li>
+          <li><a href="accessories.php">Accessories</a></li>
+          <li><a href="brand.php">Our Brand</a></li>
           <li><a href="about.php">About</a></li>
           <li><a href="contact.php">Contact</a></li>
         </ul>

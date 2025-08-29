@@ -53,10 +53,11 @@ if ($_POST && isset($_POST['add_product'])) {
     // Handle image upload
     $mainImage = null;
     if (isset($_FILES['main_image']) && $_FILES['main_image']['error'] === UPLOAD_ERR_OK) {
-        try {
-            $mainImage = uploadImage($_FILES['main_image'], 'products');
-        } catch (Exception $e) {
-            $errors[] = 'Image upload error: ' . $e->getMessage();
+        $uploadResult = handleImageUpload($_FILES['main_image'], 'products');
+        if ($uploadResult['success']) {
+            $mainImage = $uploadResult['filename'];
+        } else {
+            $errors[] = $uploadResult['error'];
         }
     }
     
@@ -126,6 +127,10 @@ $pageTitle = 'Add Product';
         .admin-content { margin-left: 250px; padding: 20px; }
         .form-section { background: white; padding: 24px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e5e7eb; }
         .form-section h3 { margin-top: 0; margin-bottom: 16px; color: #1f2937; }
+        .alert { padding: 12px 16px; margin-bottom: 16px; border-radius: 6px; border: 1px solid transparent; }
+        .alert-success { background-color: #d1fae5; border-color: #a7f3d0; color: #065f46; }
+        .alert-error { background-color: #fee2e2; border-color: #fca5a5; color: #dc2626; }
+        .alert-info { background-color: #dbeafe; border-color: #93c5fd; color: #1e40af; }
     </style>
 </head>
 <body>

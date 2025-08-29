@@ -59,7 +59,8 @@ $pageTitle = "Home - Premium Outboard Motors";
             <div class="main-header">
                 <div class="logo">
                     <a href="index.php">
-                        <h1><i class="fas fa-anchor"></i> <?php echo SITE_NAME; ?></h1>
+                        <img src="logo1.png" alt="<?php echo SITE_NAME; ?>" style="height: 50px; width: auto;">
+                        <h1><?php echo SITE_NAME; ?></h1>
                     </a>
                 </div>
                 
@@ -93,6 +94,7 @@ $pageTitle = "Home - Premium Outboard Motors";
                             <?php endforeach; ?>
                         </ul>
                     </li>
+                    <li><a href="accessories.php"><i class="fas fa-tools"></i> Accessories</a></li>
                     <li class="dropdown">
                         <a href="brands.php"><i class="fas fa-tags"></i> Brands <i class="fas fa-chevron-down"></i></a>
                         <ul class="dropdown-menu">
@@ -101,6 +103,7 @@ $pageTitle = "Home - Premium Outboard Motors";
                             <?php endforeach; ?>
                         </ul>
                     </li>
+                    <li><a href="brand.php"><i class="fas fa-award"></i> Our Brand</a></li>
                     <li><a href="about.php"><i class="fas fa-info-circle"></i> About</a></li>
                     <li><a href="contact.php"><i class="fas fa-envelope"></i> Contact</a></li>
                 </ul>

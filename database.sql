@@ -1,7 +1,7 @@
 -- Outboard Motors Sales Database Schema
 
-CREATE DATABASE IF NOT EXISTS outboard_sales;
-USE outboard_sales;
+CREATE DATABASE IF NOT EXISTS outboard_sales2;
+USE outboard_sales2;
 
 -- Users table
 CREATE TABLE users (
