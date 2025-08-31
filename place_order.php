@@ -1,6 +1,7 @@
 <?php
 require_once 'includes/config.php';
 require_once 'includes/functions.php';
+require_once 'includes/paypal_config.php';
 
 requireLogin();
 
@@ -74,21 +75,44 @@ try {
     
     $db->commit();
     
-    // Send confirmation email
-    $user = getCurrentUser();
-    $emailSubject = "Order Confirmation - $orderNumber";
-    $emailMessage = "
-        <h2>Thank you for your order!</h2>
-        <p>Order Number: <strong>$orderNumber</strong></p>
-        <p>Total: <strong>" . formatPrice($grandTotal) . "</strong></p>
-        <p>Payment Method: <strong>" . ucfirst($paymentMethod) . "</strong></p>
-        <p>We will process your order shortly and send you payment instructions.</p>
-    ";
-    
-    sendEmail($user['email'], $emailSubject, $emailMessage);
-    
-    // Redirect to order success page
-    redirect("order_success.php?order=$orderNumber&method=$paymentMethod");
+    // Handle different payment methods
+    if ($paymentMethod === 'paypal') {
+        // Create PayPal payment
+        $description = "Order $orderNumber - " . SITE_NAME;
+        $paypalResult = createPayPalPayment($grandTotal, PAYPAL_CURRENCY, $description);
+        
+        if ($paypalResult['success']) {
+            // Store payment info for later completion
+            $_SESSION['paypal_payment_id'] = $paypalResult['payment_id'];
+            $_SESSION['order_id'] = $orderId;
+            $_SESSION['order_number'] = $orderNumber;
+            
+            // Redirect to PayPal for approval
+            header('Location: ' . $paypalResult['approval_url']);
+            exit;
+        } else {
+            // PayPal payment failed
+            $db->update('orders', ['payment_status' => 'failed', 'status' => 'cancelled'], 'id = ?', [$orderId]);
+            showMessage('PayPal payment setup failed. Please try again or use a different payment method.', 'error');
+            redirect('checkout.php');
+        }
+    } else {
+        // For other payment methods, send confirmation email
+        $user = getCurrentUser();
+        $emailSubject = "Order Confirmation - $orderNumber";
+        $emailMessage = "
+            <h2>Thank you for your order!</h2>
+            <p>Order Number: <strong>$orderNumber</strong></p>
+            <p>Total: <strong>" . formatPrice($grandTotal) . "</strong></p>
+            <p>Payment Method: <strong>" . ucfirst($paymentMethod) . "</strong></p>
+            <p>We will process your order shortly and send you payment instructions.</p>
+        ";
+        
+        sendEmail($user['email'], $emailSubject, $emailMessage);
+        
+        // Redirect to order success page
+        redirect("order_success.php?order=$orderNumber&method=$paymentMethod");
+    }
     
 } catch (Exception $e) {
     if ($db) $db->rollback();

@@ -335,16 +335,21 @@ function sendEmail($to, $subject, $message, $headers = null) {
     return mail($to, $subject, $message, $headers);
 }
 
-// File upload function
+// File upload function for images
 function handleImageUpload($file, $folder = 'products') {
     try {
-        $uploadDir = '../uploads/' . $folder . '/';
+        // Determine the correct upload directory path
+        $uploadDir = (basename(getcwd()) === 'admin') ? '../uploads/' . $folder . '/' : 'uploads/' . $folder . '/';
         
-        // Ensure upload directory exists
+        // Ensure upload directory exists and is writable
         if (!is_dir($uploadDir)) {
             if (!mkdir($uploadDir, 0777, true)) {
-                return ['success' => false, 'error' => 'Failed to create upload directory'];
+                return ['success' => false, 'error' => 'Cannot create upload directory'];
             }
+        }
+        
+        if (!is_writable($uploadDir)) {
+            return ['success' => false, 'error' => 'Upload directory is not writable'];
         }
         
         // Validate input

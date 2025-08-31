@@ -12,8 +12,8 @@ if ($_POST && isset($_POST['add_product'])) {
     $model = sanitizeInput($_POST['model'] ?? '');
     $brandId = (int)($_POST['brand_id'] ?? 0);
     $categoryId = (int)($_POST['category_id'] ?? 0);
-    $price = (float)($_POST['price'] ?? 0);
-    $salePrice = !empty($_POST['sale_price']) ? (float)$_POST['sale_price'] : null;
+    $price = sanitizeInput($_POST['price'] ?? '');
+    $salePrice = !empty($_POST['sale_price']) ? sanitizeInput($_POST['sale_price']) : null;
     $description = sanitizeInput($_POST['description'] ?? '');
     $specifications = sanitizeInput($_POST['specifications'] ?? '');
     $horsepower = (int)($_POST['horsepower'] ?? 0);
@@ -38,7 +38,7 @@ if ($_POST && isset($_POST['add_product'])) {
     if (empty($model)) $errors[] = 'Model is required';
     if ($brandId <= 0) $errors[] = 'Please select a brand';
     if ($categoryId <= 0) $errors[] = 'Please select a category';
-    if ($price <= 0) $errors[] = 'Price must be greater than 0';
+    if (empty($price)) $errors[] = 'Price is required';
     if ($horsepower <= 0) $errors[] = 'Horsepower must be greater than 0';
     if (empty($sku)) $errors[] = 'SKU is required';
     
@@ -57,7 +57,20 @@ if ($_POST && isset($_POST['add_product'])) {
         if ($uploadResult['success']) {
             $mainImage = $uploadResult['filename'];
         } else {
-            $errors[] = $uploadResult['error'];
+            $errors[] = 'Image upload failed: ' . $uploadResult['error'];
+        }
+    } elseif (isset($_FILES['main_image']) && $_FILES['main_image']['error'] !== UPLOAD_ERR_NO_FILE) {
+        // Handle upload errors (but not "no file" which is allowed)
+        switch ($_FILES['main_image']['error']) {
+            case UPLOAD_ERR_INI_SIZE:
+            case UPLOAD_ERR_FORM_SIZE:
+                $errors[] = 'Image file is too large';
+                break;
+            case UPLOAD_ERR_PARTIAL:
+                $errors[] = 'Image upload was interrupted';
+                break;
+            default:
+                $errors[] = 'Image upload failed';
         }
     }
     
@@ -212,12 +225,13 @@ $pageTitle = 'Add Product';
                 <div class="grid grid-3">
                     <div class="form-group">
                         <label>Regular Price * ($)</label>
-                        <input type="number" name="price" class="input" step="0.01" min="0" required 
+                        <input type="text" name="price" class="input" required placeholder="e.g. 2500.00, Call for price, Contact us" 
                                value="<?php echo isset($_POST['price']) ? $_POST['price'] : ''; ?>">
+                        <small style="color: #6b7280;">Enter price or text like 'Call for price'</small>
                     </div>
                     <div class="form-group">
                         <label>Sale Price ($)</label>
-                        <input type="number" name="sale_price" class="input" step="0.01" min="0" 
+                        <input type="text" name="sale_price" class="input" placeholder="e.g. 2200.00, Special offer" 
                                value="<?php echo isset($_POST['sale_price']) ? $_POST['sale_price'] : ''; ?>">
                         <small style="color: #6b7280;">Leave empty if not on sale</small>
                     </div>

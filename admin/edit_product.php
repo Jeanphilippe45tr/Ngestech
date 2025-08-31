@@ -61,8 +61,8 @@ if ($_POST && isset($_POST['update_product'])) {
     $brandId = (int)$_POST['brand_id'];
     $model = sanitizeInput($_POST['model']);
     $sku = sanitizeInput($_POST['sku']);
-    $price = (float)$_POST['price'];
-    $salePrice = !empty($_POST['sale_price']) ? (float)$_POST['sale_price'] : null;
+    $price = sanitizeInput($_POST['price']);
+    $salePrice = !empty($_POST['sale_price']) ? sanitizeInput($_POST['sale_price']) : null;
     $stockQuantity = (int)$_POST['stock_quantity'];
     $minStockLevel = (int)$_POST['min_stock_level'];
     $horsepower = (int)$_POST['horsepower'];
@@ -84,7 +84,7 @@ if ($_POST && isset($_POST['update_product'])) {
     if (!$brandId) $errors[] = "Brand is required";
     if (empty($model)) $errors[] = "Model is required";
     if (empty($sku)) $errors[] = "SKU is required";
-    if ($price <= 0) $errors[] = "Price must be greater than 0";
+    if (empty($price)) $errors[] = "Price is required";
     if ($stockQuantity < 0) $errors[] = "Stock quantity cannot be negative";
     if ($minStockLevel < 0) $errors[] = "Minimum stock level cannot be negative";
     if ($horsepower <= 0) $errors[] = "Horsepower must be greater than 0";
@@ -292,11 +292,13 @@ $pageTitle = 'Edit Product';
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="price">Price ($) *</label>
-                        <input type="number" id="price" name="price" class="input" step="0.01" min="0" value="<?php echo $product['price']; ?>" required>
+                        <input type="text" id="price" name="price" class="input" value="<?php echo sanitizeInput($product['price']); ?>" required placeholder="e.g. 2500.00, Call for price, Contact us">
+                        <small style="color: #6b7280;">Enter price or text like 'Call for price'</small>
                     </div>
                     <div class="form-group">
                         <label for="sale_price">Sale Price ($)</label>
-                        <input type="number" id="sale_price" name="sale_price" class="input" step="0.01" min="0" value="<?php echo $product['sale_price']; ?>">
+                        <input type="text" id="sale_price" name="sale_price" class="input" value="<?php echo sanitizeInput($product['sale_price']); ?>" placeholder="e.g. 2200.00, Special offer">
+                        <small style="color: #6b7280;">Leave empty if not on sale</small>
                     </div>
                     <div class="form-group">
                         <label for="stock_quantity">Stock Quantity *</label>

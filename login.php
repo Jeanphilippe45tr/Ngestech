@@ -92,7 +92,7 @@ $pageTitle = 'Login';
             <div style="text-align: center; margin-top: 24px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
                 <p>Don't have an account? <a href="register.php" style="color: #0ea5e9;">Sign up here</a></p>
             </div>
-            
+            <!--
             <div style="text-align: center; margin-top: 16px;">
                 <p><strong>Login Accounts:</strong></p>
                 <p style="font-size: 14px; color: #64748b;">
@@ -103,6 +103,7 @@ $pageTitle = 'Login';
                     If admin login doesn't work, run <a href="setup_admin.php" style="color: #0ea5e9;">setup_admin.php</a> first
                 </p>
             </div>
+            -->
         </div>
     </main>
 
