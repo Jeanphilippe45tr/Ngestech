@@ -31,52 +31,9 @@ if ($_POST) {
 }
 
 $pageTitle = 'Shopping Cart';
-?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $pageTitle; ?> - <?php echo SITE_NAME; ?></title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/responsive.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-</head>
-<body>
-    <header class="header">
-        <div class="container">
-            <div class="main-header">
-                <div class="logo">
-                    <a href="index.php">
-                        <h1><i class="fas fa-anchor"></i> <?php echo SITE_NAME; ?></h1>
-                    </a>
-                </div>
-                <div class="search-bar">
-                    <form action="products.php" method="GET" class="search-form">
-                        <input type="text" name="q" placeholder="Search...">
-                        <button type="submit"><i class="fas fa-search"></i></button>
-                    </form>
-                </div>
-                <div class="cart-info">
-                    <a href="cart.php" class="cart-link">
-                        <i class="fas fa-shopping-cart"></i>
-<span class="cart-count"><?php echo $cartCount; ?></span>
-                        <span class="cart-total"><?php echo formatPrice($cartTotal); ?></span>
-                    </a>
-                </div>
-            </div>
-            <nav class="navigation">
-                <ul class="nav-menu">
-                    <li><a href="index.php">Home</a></li>
-                    <li><a href="products.php">Products</a></li>
-                    <li><a href="about.php">About</a></li>
-                    <li><a href="contact.php">Contact</a></li>
-                </ul>
-                <div class="mobile-menu-toggle"><i class="fas fa-bars"></i></div>
-            </nav>
-        </div>
-    </header>
 
+includeHeader($pageTitle);
+?>
     <main class="container">
         <?php displayMessage(); ?>
         
@@ -119,10 +76,12 @@ $pageTitle = 'Shopping Cart';
                             </div>
                             <div><?php echo formatPrice($item['price']); ?></div>
                             <div>
-                                <input type="number" name="quantities[<?php echo $item['id']; ?>]" 
-                                       value="<?php echo $item['quantity']; ?>" 
-                                       min="0" max="99" 
-                                       style="width: 80px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 8px;">
+                                <label>
+                                    <input type="number" name="quantities[<?php echo $item['id']; ?>]"
+                                           value="<?php echo $item['quantity']; ?>"
+                                           min="0" max="99"
+                                           style="width: 80px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 8px;">
+                                </label>
                             </div>
                             <div><?php echo formatPrice($item['price'] * $item['quantity']); ?></div>
                             <div>
@@ -160,18 +119,4 @@ $pageTitle = 'Shopping Cart';
         <?php endif; ?>
     </main>
 
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-bottom">
-                <p>&copy; <?php echo date('Y'); ?> <?php echo SITE_NAME; ?>. All rights reserved.</p>
-                <div class="footer-links">
-                    <a href="privacy.php">Privacy Policy</a>
-                    <a href="terms.php">Terms of Service</a>
-                </div>
-            </div>
-        </div>
-    </footer>
-
-    <script src="js/main.js"></script>
-</body>
-</html>
+<?php includeFooter(); ?>

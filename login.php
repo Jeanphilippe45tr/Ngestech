@@ -44,28 +44,6 @@ if ($_POST) {
 
 $pageTitle = 'Login';
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $pageTitle; ?> - <?php echo SITE_NAME; ?></title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/responsive.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-</head>
-<body>
-    <header class="header">
-        <div class="container">
-            <div class="main-header">
-                <div class="logo">
-                    <a href="index.php">
-                        <h1><i class="fas fa-anchor"></i> <?php echo SITE_NAME; ?></h1>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </header>
 
     <main class="container">
         <div style="max-width: 400px; margin: 40px auto; background: white; padding: 32px; border-radius: 12px; border: 1px solid #e2e8f0;">
@@ -107,16 +85,4 @@ $pageTitle = 'Login';
         </div>
     </main>
 
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-bottom">
-                <p>&copy; <?php echo date('Y'); ?> <?php echo SITE_NAME; ?>. All rights reserved.</p>
-                <div class="footer-links">
-                    <a href="privacy.php">Privacy Policy</a>
-                    <a href="terms.php">Terms of Service</a>
-                </div>
-            </div>
-        </div>
-    </footer>
-</body>
-</html>
+    <?php includeFooter(); ?>

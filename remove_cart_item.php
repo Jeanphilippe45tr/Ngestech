@@ -45,13 +45,15 @@ try {
     // Get updated cart info
     $cartCount = (int)getCartItemCount($userId);
     $cartTotal = (float)getCartTotal($userId);
-    
-    echo json_encode([
-        'success' => true,
-        'cart_count' => $cartCount,
-        'cart_total' => $cartTotal,
-        'cart_total_formatted' => formatPrice($cartTotal)
-    ]);
+
+    showMessage('Removed from cart successfully', 'success');
+    redirect('cart.php');
+//    echo json_encode([
+//        'success' => true,
+//        'cart_count' => $cartCount,
+//        'cart_total' => $cartTotal,
+//        'cart_total_formatted' => formatPrice($cartTotal)
+//    ]);
     
 } catch (Exception $e) {
     error_log("Cart item removal failed: " . $e->getMessage());

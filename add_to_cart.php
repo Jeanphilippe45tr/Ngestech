@@ -23,13 +23,15 @@ try {
   $count = (int)getCartItemCount(isLoggedIn() ? $_SESSION['user_id'] : null);
   $total = (float)getCartTotal(isLoggedIn() ? $_SESSION['user_id'] : null);
 
-  echo json_encode([
-    'success' => true,
-    'cart_count' => $count,
-    'cart_total' => $total,
-    'cart_total_formatted' => formatPrice($total)
-  ]);
+  showMessage('Added to cart successfully', 'success');
+  redirect('products.php');
+
+//  echo json_encode([
+//    'success' => true,
+//    'cart_count' => $count,
+//    'cart_total' => $total,
+//    'cart_total_formatted' => formatPrice($total)
+//  ]);
 } catch (Exception $e) {
   echo json_encode(['success' => false, 'message' => $e->getMessage()]);
 }
-

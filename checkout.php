@@ -140,18 +140,6 @@ $pageTitle = 'Checkout';
     </div>
   </main>
 
-  <footer class="footer">
-    <div class="container">
-      <div class="footer-bottom">
-        <p>&copy; <?php echo date('Y'); ?> <?php echo SITE_NAME; ?>. All rights reserved.</p>
-        <div class="footer-links">
-          <a href="privacy.php">Privacy Policy</a>
-          <a href="terms.php">Terms of Service</a>
-        </div>
-      </div>
-    </div>
-  </footer>
-
   <script>
     // Toggle visual active state for selected payment method
     document.addEventListener('change', (e) => {
@@ -161,5 +149,4 @@ $pageTitle = 'Checkout';
       }
     });
   </script>
-</body>
-</html>
+  <?php includeFooter(); ?>

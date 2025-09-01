@@ -8,48 +8,9 @@ if (!$product) { showMessage('Product not found', 'error'); redirect('products.p
 $images = getProductImages($id);
 
 $pageTitle = sanitizeInput($product['name']);
-?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><?php echo $pageTitle; ?> - <?php echo SITE_NAME; ?></title>
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/responsive.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-</head>
-<body>
-  <header class="header">
-    <div class="container">
-      <div class="main-header">
-        <div class="logo"><a href="index.php"><h1><i class="fas fa-anchor"></i> <?php echo SITE_NAME; ?></h1></a></div>
-        <div class="search-bar">
-          <form action="products.php" method="GET" class="search-form">
-            <input type="text" name="q" placeholder="Search...">
-            <button type="submit"><i class="fas fa-search"></i></button>
-          </form>
-        </div>
-        <div class="cart-info">
-          <a href="cart.php" class="cart-link">
-            <i class="fas fa-shopping-cart"></i>
-            <span class="cart-count"><?php echo getCartItemCount(isLoggedIn() ? $_SESSION['user_id'] : null); ?></span>
-            <span class="cart-total"><?php echo formatPrice(getCartTotal(isLoggedIn() ? $_SESSION['user_id'] : null)); ?></span>
-          </a>
-        </div>
-      </div>
-      <nav class="navigation">
-        <ul class="nav-menu">
-          <li><a href="index.php">Home</a></li>
-          <li><a class="active" href="products.php">Products</a></li>
-          <li><a href="about.php">About</a></li>
-          <li><a href="contact.php">Contact</a></li>
-        </ul>
-        <div class="mobile-menu-toggle"><i class="fas fa-bars"></i></div>
-      </nav>
-    </div>
-  </header>
 
+includeHeader($pageTitle);
+?>
   <main class="container">
     <div class="product-page">
       <div class="product-gallery">
@@ -95,25 +56,12 @@ $pageTitle = sanitizeInput($product['name']);
         <?php endif; ?>
         <form method="POST" action="add_to_cart.php" style="display:flex; gap:10px; align-items:center;">
           <input type="hidden" name="product_id" value="<?php echo $product['id']; ?>">
-          <input class="input qty" type="number" name="quantity" value="1" min="1">
-          <button class="btn btn-primary" type="submit"><i class="fas fa-cart-plus"></i> Add to Cart</button>
+            <label>
+                <input class="input qty" type="number" name="quantity" value="1" min="1">
+            </label>
+            <button class="btn btn-primary" type="submit"><i class="fas fa-cart-plus"></i> Add to Cart</button>
         </form>
       </div>
     </div>
   </main>
-
-  <footer class="footer">
-    <div class="container">
-      <div class="footer-bottom">
-        <p>&copy; <?php echo date('Y'); ?> <?php echo SITE_NAME; ?>. All rights reserved.</p>
-        <div class="footer-links">
-          <a href="privacy.php">Privacy Policy</a>
-          <a href="terms.php">Terms of Service</a>
-        </div>
-      </div>
-    </div>
-  </footer>
-
-  <script src="js/main.js"></script>
-</body>
-</html>
+<?php includeFooter(); ?>
