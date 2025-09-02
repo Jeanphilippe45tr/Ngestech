@@ -8,9 +8,49 @@ if (!$product) { showMessage('Product not found', 'error'); redirect('products.p
 $images = getProductImages($id);
 
 $pageTitle = sanitizeInput($product['name']);
-
-includeHeader($pageTitle);
 ?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="<?php echo generateCSRFToken(); ?>">
+  <title><?php echo $pageTitle; ?> - <?php echo SITE_NAME; ?></title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/responsive.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+  <header class="header">
+    <div class="container">
+      <div class="main-header">
+        <div class="logo"><a href="index.php"><h1><i class="fas fa-anchor"></i> <?php echo SITE_NAME; ?></h1></a></div>
+        <div class="search-bar">
+          <form action="products.php" method="GET" class="search-form">
+            <input type="text" name="q" placeholder="Search...">
+            <button type="submit"><i class="fas fa-search"></i></button>
+          </form>
+        </div>
+        <div class="cart-info">
+          <a href="cart.php" class="cart-link">
+            <i class="fas fa-shopping-cart"></i>
+            <span class="cart-count"><?php echo getCartItemCount(isLoggedIn() ? $_SESSION['user_id'] : null); ?></span>
+            <span class="cart-total"><?php echo formatPrice(getCartTotal(isLoggedIn() ? $_SESSION['user_id'] : null)); ?></span>
+          </a>
+        </div>
+      </div>
+      <nav class="navigation">
+        <ul class="nav-menu">
+          <li><a href="index.php">Home</a></li>
+          <li><a class="active" href="products.php">Products</a></li>
+          <li><a href="about.php">About</a></li>
+          <li><a href="contact.php">Contact</a></li>
+        </ul>
+        <div class="mobile-menu-toggle"><i class="fas fa-bars"></i></div>
+      </nav>
+    </div>
+  </header>
+
   <main class="container">
     <div class="product-page">
       <div class="product-gallery">
@@ -54,14 +94,81 @@ includeHeader($pageTitle);
             <p style="color:#475569;"><?php echo nl2br(sanitizeInput($product['description'])); ?></p>
           </div>
         <?php endif; ?>
-        <form method="POST" action="add_to_cart.php" style="display:flex; gap:10px; align-items:center;">
-          <input type="hidden" name="product_id" value="<?php echo $product['id']; ?>">
-            <label>
-                <input class="input qty" type="number" name="quantity" value="1" min="1">
-            </label>
-            <button class="btn btn-primary" type="submit"><i class="fas fa-cart-plus"></i> Add to Cart</button>
+        <form method="POST" action="add_to_cart.php" id="add-to-cart-form" style="display:flex; gap:10px; align-items:center;">
+          <input type="hidden" name="item_id" value="<?php echo $product['id']; ?>">
+          <input type="hidden" name="item_type" value="product">
+          <input class="input qty" type="number" name="quantity" value="1" min="1">
+          <button class="btn btn-primary" type="submit"><i class="fas fa-cart-plus"></i> Add to Cart</button>
         </form>
+        <div id="add-to-cart-message" style="margin-top: 10px;"></div>
       </div>
     </div>
   </main>
-<?php includeFooter(); ?>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-bottom">
+        <p>&copy; <?php echo date('Y'); ?> <?php echo SITE_NAME; ?>. All rights reserved.</p>
+        <div class="footer-links">
+          <a href="privacy.php">Privacy Policy</a>
+          <a href="terms.php">Terms of Service</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('add-to-cart-form');
+        const messageDiv = document.getElementById('add-to-cart-message');
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(form);
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            formData.append('csrf_token', csrfToken);
+
+            const button = form.querySelector('button[type="submit"]');
+            const originalButtonText = button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
+
+            fetch('add_to_cart.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update cart display in header
+                    const cartCountEl = document.querySelector('.cart-count');
+                    const cartTotalEl = document.querySelector('.cart-total');
+                    if (cartCountEl) cartCountEl.textContent = data.cart_count;
+                    if (cartTotalEl) cartTotalEl.textContent = data.cart_total_formatted;
+
+                    // Show success message
+                    messageDiv.innerHTML = '<div class="alert alert-success">Product added to cart!</div>';
+                    setTimeout(() => messageDiv.innerHTML = '', 3000);
+                } else {
+                    // Show error message
+                    messageDiv.innerHTML = `<div class="alert alert-error">Error: ${data.message}</div>`;
+                    setTimeout(() => messageDiv.innerHTML = '', 5000);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                messageDiv.innerHTML = '<div class="alert alert-error">An unexpected error occurred.</div>';
+                setTimeout(() => messageDiv.innerHTML = '', 5000);
+            })
+            .finally(() => {
+                button.disabled = false;
+                button.innerHTML = originalButtonText;
+            });
+        });
+    });
+  </script>
+</body>
+</html>

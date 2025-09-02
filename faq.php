@@ -6,9 +6,111 @@ $categories = getAllCategories();
 $brands = getAllBrands();
 
 $pageTitle = 'Frequently Asked Questions';
-
-includeHeader($pageTitle);
 ?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?php echo $pageTitle; ?> - <?php echo SITE_NAME; ?></title>
+    <meta name="description" content="Find answers to common questions about outboard motors, installation, maintenance, and purchasing. Get expert advice from our marine specialists.">
+    <meta name="keywords" content="outboard motor FAQ, marine engine questions, boat motor help, outboard installation, maintenance questions">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <div class="contact-info">
+                    <span><i class="fas fa-phone"></i> (555) 123-4567</span>
+                    <span><i class="fas fa-envelope"></i> <?php echo SITE_EMAIL; ?></span>
+                </div>
+                <div class="user-actions">
+                    <?php if (isLoggedIn()): ?>
+                        <?php $currentUser = getCurrentUser(); ?>
+                        <span>Welcome, <?php echo sanitizeInput($currentUser['first_name']); ?>!</span>
+                        <a href="account.php"><i class="fas fa-user"></i> My Account</a>
+                        <?php if (isAdmin()): ?>
+                            <a href="admin/"><i class="fas fa-cog"></i> Admin</a>
+                        <?php endif; ?>
+                        <a href="logout.php"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    <?php else: ?>
+                        <a href="login.php"><i class="fas fa-sign-in-alt"></i> Login</a>
+                        <a href="register.php"><i class="fas fa-user-plus"></i> Register</a>
+                    <?php endif; ?>
+                </div>
+            </div>
+            
+            <!-- Main Header -->
+            <div class="main-header">
+                <div class="logo">
+                    <a href="index.php">
+                        <img src="logo1.png" alt="<?php echo SITE_NAME; ?>" style="height: 50px; width: auto;">
+                        <h1><?php echo SITE_NAME; ?></h1>
+                    </a>
+                </div>
+                
+                <!-- Search Bar -->
+                <div class="search-bar">
+                    <form action="search.php" method="GET" class="search-form">
+                        <input type="text" name="q" placeholder="Search outboard motors...">
+                        <button type="submit"><i class="fas fa-search"></i></button>
+                    </form>
+                </div>
+                
+                <!-- Cart -->
+                <div class="cart-info">
+                    <a href="cart.php" class="cart-link">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span class="cart-count"><?php echo getCartItemCount(isLoggedIn() ? $_SESSION['user_id'] : null); ?></span>
+                        <span class="cart-total"><?php echo formatPrice(getCartTotal(isLoggedIn() ? $_SESSION['user_id'] : null)); ?></span>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Navigation -->
+            <nav class="navigation">
+                <ul class="nav-menu">
+                    <li><a href="index.php"><i class="fas fa-home"></i> Home</a></li>
+                    <li class="dropdown">
+                        <a href="products.php"><i class="fas fa-cog"></i> Products <i class="fas fa-chevron-down"></i></a>
+                        <ul class="dropdown-menu">
+                            <?php foreach ($categories as $category): ?>
+                                <li><a href="products.php?category=<?php echo $category['id']; ?>"><?php echo sanitizeInput($category['name']); ?></a></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </li>
+                    <li><a href="accessories.php"><i class="fas fa-tools"></i> Accessories</a></li>
+                    <li class="dropdown">
+                        <a href="brands.php"><i class="fas fa-tags"></i> Brands <i class="fas fa-chevron-down"></i></a>
+                        <ul class="dropdown-menu">
+                            <?php foreach ($brands as $brand): ?>
+                                <li><a href="products.php?brand=<?php echo $brand['id']; ?>"><?php echo sanitizeInput($brand['name']); ?></a></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </li>
+                    <li><a href="brand.php"><i class="fas fa-award"></i> Our Brand</a></li>
+                    <li><a href="about.php"><i class="fas fa-info-circle"></i> About</a></li>
+                    <li><a href="contact.php"><i class="fas fa-envelope"></i> Contact</a></li>
+                </ul>
+                <div class="mobile-menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </div>
+            </nav>
+        </div>
+    </header>
+
     <!-- Main Content -->
     <main>
         <?php displayMessage(); ?>

@@ -10,6 +10,11 @@ if (isLoggedIn()) {
 $redirect = isset($_GET['redirect']) ? sanitizeInput($_GET['redirect']) : 'index.php';
 
 if ($_POST) {
+    if (!validateCSRFToken($_POST['csrf_token'])) {
+        showMessage('Invalid request. Please try again.', 'error');
+        redirect('login.php');
+    }
+
     $email = sanitizeInput($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
     
@@ -44,6 +49,28 @@ if ($_POST) {
 
 $pageTitle = 'Login';
 ?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?php echo $pageTitle; ?> - <?php echo SITE_NAME; ?></title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="main-header">
+                <div class="logo">
+                    <a href="index.php">
+                        <h1><i class="fas fa-anchor"></i> <?php echo SITE_NAME; ?></h1>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
 
     <main class="container">
         <div style="max-width: 400px; margin: 40px auto; background: white; padding: 32px; border-radius: 12px; border: 1px solid #e2e8f0;">
@@ -62,6 +89,8 @@ $pageTitle = 'Login';
                     <input type="password" name="password" class="input" required>
                 </div>
                 
+                <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
+
                 <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 16px;">
                     <i class="fas fa-sign-in-alt"></i> Login
                 </button>
@@ -85,4 +114,16 @@ $pageTitle = 'Login';
         </div>
     </main>
 
-    <?php includeFooter(); ?>
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <?php echo date('Y'); ?> <?php echo SITE_NAME; ?>. All rights reserved.</p>
+                <div class="footer-links">
+                    <a href="privacy.php">Privacy Policy</a>
+                    <a href="terms.php">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

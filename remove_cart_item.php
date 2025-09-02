@@ -9,6 +9,11 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+if (!validateCSRFToken($_POST['csrf_token'] ?? '')) {
+    echo json_encode(['success' => false, 'message' => 'Invalid request token.']);
+    exit;
+}
+
 $cartId = isset($_POST['cart_id']) ? (int)$_POST['cart_id'] : 0;
 
 if ($cartId <= 0) {
@@ -45,15 +50,13 @@ try {
     // Get updated cart info
     $cartCount = (int)getCartItemCount($userId);
     $cartTotal = (float)getCartTotal($userId);
-
-    showMessage('Removed from cart successfully', 'success');
-    redirect('cart.php');
-//    echo json_encode([
-//        'success' => true,
-//        'cart_count' => $cartCount,
-//        'cart_total' => $cartTotal,
-//        'cart_total_formatted' => formatPrice($cartTotal)
-//    ]);
+    
+    echo json_encode([
+        'success' => true,
+        'cart_count' => $cartCount,
+        'cart_total' => $cartTotal,
+        'cart_total_formatted' => formatPrice($cartTotal)
+    ]);
     
 } catch (Exception $e) {
     error_log("Cart item removal failed: " . $e->getMessage());

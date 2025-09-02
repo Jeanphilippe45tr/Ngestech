@@ -4,6 +4,11 @@ require_once 'includes/functions.php';
 
 // Handle form submission
 if ($_POST && isset($_POST['submit_contact'])) {
+    if (!validateCSRFToken($_POST['csrf_token'])) {
+        showMessage('Invalid request. Please try again.', 'error');
+        redirect('contact.php');
+    }
+
     $name = sanitizeInput($_POST['name'] ?? '');
     $email = sanitizeInput($_POST['email'] ?? '');
     $phone = sanitizeInput($_POST['phone'] ?? '');
@@ -58,9 +63,52 @@ if ($_POST && isset($_POST['submit_contact'])) {
 }
 
 $pageTitle = 'Contact Us';
-
-includeHeader($pageTitle);
 ?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?php echo $pageTitle; ?> - <?php echo SITE_NAME; ?></title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="main-header">
+                <div class="logo">
+                    <a href="index.php">
+                        <h1><i class="fas fa-anchor"></i> <?php echo SITE_NAME; ?></h1>
+                    </a>
+                </div>
+                <div class="search-bar">
+                    <form action="products.php" method="GET" class="search-form">
+                        <input type="text" name="q" placeholder="Search...">
+                        <button type="submit"><i class="fas fa-search"></i></button>
+                    </form>
+                </div>
+                <div class="cart-info">
+                    <a href="cart.php" class="cart-link">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span class="cart-count"><?php echo getCartItemCount(isLoggedIn() ? $_SESSION['user_id'] : null); ?></span>
+                        <span class="cart-total"><?php echo formatPrice(getCartTotal(isLoggedIn() ? $_SESSION['user_id'] : null)); ?></span>
+                    </a>
+                </div>
+            </div>
+            <nav class="navigation">
+                <ul class="nav-menu">
+                    <li><a href="index.php">Home</a></li>
+                    <li><a href="products.php">Products</a></li>
+                    <li><a href="about.php">About</a></li>
+                    <li><a href="contact.php" class="active">Contact</a></li>
+                </ul>
+                <div class="mobile-menu-toggle"><i class="fas fa-bars"></i></div>
+            </nav>
+        </div>
+    </header>
+
     <main class="container">
         <h1>Contact Us</h1>
         
@@ -74,10 +122,8 @@ includeHeader($pageTitle);
                     <div class="grid grid-2">
                         <div class="form-group">
                             <label>Full Name *</label>
-                            <label>
-                                <input type="text" name="name" class="input" required
-                                       value="<?php echo isset($_POST['name']) ? sanitizeInput($_POST['name']) : ''; ?>">
-                            </label>
+                            <input type="text" name="name" class="input" required 
+                                   value="<?php echo isset($_POST['name']) ? sanitizeInput($_POST['name']) : ''; ?>">
                         </div>
                         <div class="form-group">
                             <label>Email Address *</label>
@@ -94,17 +140,15 @@ includeHeader($pageTitle);
                         </div>
                         <div class="form-group">
                             <label>Subject *</label>
-                            <label>
-                                <select name="subject" class="input" required>
-                                    <option value="">Select a subject</option>
-                                    <option value="General Inquiry" <?php echo (isset($_POST['subject']) && $_POST['subject'] === 'General Inquiry') ? 'selected' : ''; ?>>General Inquiry</option>
-                                    <option value="Product Question" <?php echo (isset($_POST['subject']) && $_POST['subject'] === 'Product Question') ? 'selected' : ''; ?>>Product Question</option>
-                                    <option value="Service Request" <?php echo (isset($_POST['subject']) && $_POST['subject'] === 'Service Request') ? 'selected' : ''; ?>>Service Request</option>
-                                    <option value="Parts Inquiry" <?php echo (isset($_POST['subject']) && $_POST['subject'] === 'Parts Inquiry') ? 'selected' : ''; ?>>Parts Inquiry</option>
-                                    <option value="Warranty Claim" <?php echo (isset($_POST['subject']) && $_POST['subject'] === 'Warranty Claim') ? 'selected' : ''; ?>>Warranty Claim</option>
-                                    <option value="Other" <?php echo (isset($_POST['subject']) && $_POST['subject'] === 'Other') ? 'selected' : ''; ?>>Other</option>
-                                </select>
-                            </label>
+                            <select name="subject" class="input" required>
+                                <option value="">Select a subject</option>
+                                <option value="General Inquiry" <?php echo (isset($_POST['subject']) && $_POST['subject'] === 'General Inquiry') ? 'selected' : ''; ?>>General Inquiry</option>
+                                <option value="Product Question" <?php echo (isset($_POST['subject']) && $_POST['subject'] === 'Product Question') ? 'selected' : ''; ?>>Product Question</option>
+                                <option value="Service Request" <?php echo (isset($_POST['subject']) && $_POST['subject'] === 'Service Request') ? 'selected' : ''; ?>>Service Request</option>
+                                <option value="Parts Inquiry" <?php echo (isset($_POST['subject']) && $_POST['subject'] === 'Parts Inquiry') ? 'selected' : ''; ?>>Parts Inquiry</option>
+                                <option value="Warranty Claim" <?php echo (isset($_POST['subject']) && $_POST['subject'] === 'Warranty Claim') ? 'selected' : ''; ?>>Warranty Claim</option>
+                                <option value="Other" <?php echo (isset($_POST['subject']) && $_POST['subject'] === 'Other') ? 'selected' : ''; ?>>Other</option>
+                            </select>
                         </div>
                     </div>
                     
@@ -112,6 +156,8 @@ includeHeader($pageTitle);
                         <label>Message *</label>
                         <textarea name="message" class="input" rows="6" required style="resize: vertical;"><?php echo isset($_POST['message']) ? sanitizeInput($_POST['message']) : ''; ?></textarea>
                     </div>
+
+                    <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
                     
                     <button type="submit" name="submit_contact" class="btn btn-primary" style="width: 100%;">
                         <i class="fas fa-paper-plane"></i> Send Message
@@ -201,4 +247,18 @@ includeHeader($pageTitle);
         </div>
     </main>
 
-<?php includeFooter(); ?>
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <?php echo date('Y'); ?> <?php echo SITE_NAME; ?>. All rights reserved.</p>
+                <div class="footer-links">
+                    <a href="privacy.php">Privacy Policy</a>
+                    <a href="terms.php">Terms of Service</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
