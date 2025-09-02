@@ -120,13 +120,13 @@ $pageTitle = 'Shopping Cart';
                             </div>
                         </div>
                         <div><?php echo formatPrice($item['price']); ?></div>
-                        <td>
+                        <div>
                             <div class="quantity-control">
                                 <button class="quantity-btn" data-action="decrease" data-cart-id="<?php echo $item['id']; ?>">-</button>
                                 <input type="text" class="quantity-input" value="<?php echo $item['quantity']; ?>" readonly>
                                 <button class="quantity-btn" data-action="increase" data-cart-id="<?php echo $item['id']; ?>">+</button>
                             </div>
-                        </td>
+                        </div>
                         <div class="cart-item-total"><?php echo formatPrice($item['price'] * $item['quantity']); ?></div>
                         <div>
                             <button type="button" class="remove-item" data-cart-id="<?php echo $item['id']; ?>" 

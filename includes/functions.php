@@ -284,7 +284,13 @@ function formatWeight($weight) {
 }
 
 function getProductImageUrl($imagePath) {
-    if ($imagePath && !empty(trim($imagePath))) {
+    // Handle null or empty image paths
+    if (empty($imagePath)) {
+        return SITE_URL . '/images/no-image.jpg';
+    }
+    
+    $imagePath = trim((string)$imagePath);
+    if (!empty($imagePath)) {
         // If it's just a filename, assume it's in uploads/products/
         if (strpos($imagePath, '/') === false) {
             $webPath = 'uploads/products/' . $imagePath;
@@ -298,6 +304,250 @@ function getProductImageUrl($imagePath) {
     return SITE_URL . '/images/no-image.jpg';
 }
 
+// Enhanced search function with proper error handling and bug fixes
+function searchProducts($query, $category = null, $brand = null, $minPrice = null, $maxPrice = null, $limit = 12, $offset = 0) {
+    $db = Database::getInstance();
+    $params = [];
+    $whereConditions = ["p.status = 'active'"];
+    
+    if ($query) {
+        $whereConditions[] = "(p.name LIKE ? OR p.description LIKE ? OR p.model LIKE ?)";
+        $searchTerm = "%{$query}%";
+        $params[] = $searchTerm;
+        $params[] = $searchTerm;
+        $params[] = $searchTerm;
+    }
+    
+    if ($category) {
+        $whereConditions[] = "p.category_id = ?";
+        $params[] = $category;
+    }
+    
+    if ($brand) {
+        $whereConditions[] = "p.brand_id = ?";
+        $params[] = $brand;
+    }
+    
+    if ($minPrice !== null) {
+        $whereConditions[] = "(p.price REGEXP '^[0-9]+\.?[0-9]*$' AND CAST(p.price AS DECIMAL(10,2)) >= ?)";
+        $params[] = $minPrice;
+    }
+    
+    if ($maxPrice !== null) {
+        $whereConditions[] = "(p.price REGEXP '^[0-9]+\.?[0-9]*$' AND CAST(p.price AS DECIMAL(10,2)) <= ?)";
+        $params[] = $maxPrice;
+    }
+    
+    $whereClause = implode(' AND ', $whereConditions);
+    
+    // Get products with pagination
+    $products = $db->fetchAll(
+        "SELECT p.*, b.name as brand_name, c.name as category_name 
+         FROM products p 
+         JOIN brands b ON p.brand_id = b.id 
+         JOIN categories c ON p.category_id = c.id 
+         WHERE {$whereClause}
+         ORDER BY p.name 
+         LIMIT ? OFFSET ?",
+        array_merge($params, [$limit, $offset])
+    );
+    
+    // Get total count for pagination
+    $totalCount = $db->fetchColumn(
+        "SELECT COUNT(*) FROM products p 
+         JOIN brands b ON p.brand_id = b.id 
+         JOIN categories c ON p.category_id = c.id 
+         WHERE {$whereClause}",
+        $params
+    );
+    
+    return [
+        'products' => $products,
+        'total' => $totalCount
+    ];
+}
+
+// Enhanced cart functions to support accessories
+function addToCart($itemId, $itemType = 'product', $quantity = 1, $userId = null) {
+    $db = Database::getInstance();
+    $sessionId = session_id();
+    
+    // Validate item exists and is active
+    if ($itemType === 'product') {
+        $item = $db->fetchOne("SELECT id, stock_quantity FROM products WHERE id = ? AND status = 'active'", [$itemId]);
+        if (!$item) {
+            throw new Exception('Product not found or inactive');
+        }
+        if (isset($item['stock_quantity']) && $item['stock_quantity'] < $quantity) {
+            throw new Exception('Insufficient stock available');
+        }
+    } elseif ($itemType === 'accessory') {
+        $item = $db->fetchOne("SELECT id FROM accessories WHERE id = ? AND status = 'active'", [$itemId]);
+        if (!$item) {
+            throw new Exception('Accessory not found or inactive');
+        }
+    } else {
+        throw new Exception('Invalid item type');
+    }
+    
+    // Check if item already in cart
+    if ($userId) {
+        $existing = $db->fetchOne(
+            "SELECT * FROM cart WHERE user_id = ? AND item_id = ? AND item_type = ?",
+            [$userId, $itemId, $itemType]
+        );
+    } else {
+        $existing = $db->fetchOne(
+            "SELECT * FROM cart WHERE session_id = ? AND item_id = ? AND item_type = ?",
+            [$sessionId, $itemId, $itemType]
+        );
+    }
+    
+    if ($existing) {
+        // Update quantity
+        $newQuantity = $existing['quantity'] + $quantity;
+        if ($userId) {
+            $db->update('cart', 
+                ['quantity' => $newQuantity], 
+                'user_id = ? AND item_id = ? AND item_type = ?', 
+                [$userId, $itemId, $itemType]
+            );
+        } else {
+            $db->update('cart', 
+                ['quantity' => $newQuantity], 
+                'session_id = ? AND item_id = ? AND item_type = ?', 
+                [$sessionId, $itemId, $itemType]
+            );
+        }
+    } else {
+        // Add new item
+        $cartData = [
+            'item_id' => $itemId,
+            'item_type' => $itemType,
+            'quantity' => $quantity
+        ];
+        
+        if ($userId) {
+            $cartData['user_id'] = $userId;
+        } else {
+            $cartData['session_id'] = $sessionId;
+        }
+        
+        $db->insert('cart', $cartData);
+    }
+    
+    return true;
+}
+
+function getCartItems($userId = null) {
+    $db = Database::getInstance();
+    $sessionId = session_id();
+    
+    if ($userId) {
+        $cartItems = $db->fetchAll(
+            "SELECT c.*, 
+                    CASE 
+                        WHEN c.item_type = 'product' THEN p.name
+                        WHEN c.item_type = 'accessory' THEN a.name
+                    END as name,
+                    CASE 
+                        WHEN c.item_type = 'product' THEN p.price
+                        WHEN c.item_type = 'accessory' THEN a.price
+                    END as price,
+                    CASE 
+                        WHEN c.item_type = 'product' THEN p.main_image
+                        WHEN c.item_type = 'accessory' THEN a.image
+                    END as main_image,
+                    CASE 
+                        WHEN c.item_type = 'product' THEN b.name
+                        ELSE 'Accessory'
+                    END as brand_name,
+                    c.item_id as product_id
+             FROM cart c
+             LEFT JOIN products p ON c.item_id = p.id AND c.item_type = 'product'
+             LEFT JOIN accessories a ON c.item_id = a.id AND c.item_type = 'accessory'
+             LEFT JOIN brands b ON p.brand_id = b.id
+             WHERE c.user_id = ?
+             ORDER BY c.added_at DESC",
+            [$userId]
+        );
+    } else {
+        $cartItems = $db->fetchAll(
+            "SELECT c.*, 
+                    CASE 
+                        WHEN c.item_type = 'product' THEN p.name
+                        WHEN c.item_type = 'accessory' THEN a.name
+                    END as name,
+                    CASE 
+                        WHEN c.item_type = 'product' THEN p.price
+                        WHEN c.item_type = 'accessory' THEN a.price
+                    END as price,
+                    CASE 
+                        WHEN c.item_type = 'product' THEN p.main_image
+                        WHEN c.item_type = 'accessory' THEN a.image
+                    END as main_image,
+                    CASE 
+                        WHEN c.item_type = 'product' THEN b.name
+                        ELSE 'Accessory'
+                    END as brand_name,
+                    c.item_id as product_id
+             FROM cart c
+             LEFT JOIN products p ON c.item_id = p.id AND c.item_type = 'product'
+             LEFT JOIN accessories a ON c.item_id = a.id AND c.item_type = 'accessory'
+             LEFT JOIN brands b ON p.brand_id = b.id
+             WHERE c.session_id = ?
+             ORDER BY c.added_at DESC",
+            [$sessionId]
+        );
+    }
+    
+    // Convert price strings to numbers for calculations
+    foreach ($cartItems as &$item) {
+        if (empty($item['price']) || !is_numeric($item['price'])) {
+            $item['price'] = 0; // Default for "Call for price" etc.
+        } else {
+            $item['price'] = (float)$item['price'];
+        }
+    }
+    
+    return $cartItems;
+}
+
+function getCartTotal($userId = null) {
+    $items = getCartItems($userId);
+    $total = 0;
+    
+    foreach ($items as $item) {
+        if (is_numeric($item['price'])) {
+            $total += (float)$item['price'] * $item['quantity'];
+        }
+    }
+    
+    return $total;
+}
+
+function getCartItemCount($userId = null) {
+    $db = Database::getInstance();
+    $sessionId = session_id();
+    
+    if ($userId) {
+        return $db->fetchColumn(
+            "SELECT SUM(quantity) FROM cart WHERE user_id = ?",
+            [$userId]
+        ) ?: 0;
+    } else {
+        return $db->fetchColumn(
+            "SELECT SUM(quantity) FROM cart WHERE session_id = ?",
+            [$sessionId]
+        ) ?: 0;
+    }
+}
+
+// PayPal SDK URL helper function
+function getPayPalSDKUrl($currency = 'USD', $intent = 'capture') {
+    $clientId = PAYPAL_CLIENT_ID;
+    return "https://www.paypal.com/sdk/js?client-id={$clientId}&currency={$currency}&intent={$intent}";
+}
 function redirect($url) {
     header("Location: $url");
     exit;

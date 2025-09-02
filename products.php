@@ -23,7 +23,7 @@ try {
     $categories = getAllCategories();
     $brands = getAllBrands();
 
-    // Call the refactored search function
+    // Call the search function
     $searchResult = searchProducts($q, $category, $brand, $minPrice, $maxPrice, $limit, $offset);
     $products = $searchResult['products'];
     $total = $searchResult['total'];
