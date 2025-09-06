@@ -4,6 +4,11 @@ require_once 'includes/functions.php';
 
 // Handle form submission
 if ($_POST && isset($_POST['submit_contact'])) {
+    if (!validateCSRFToken($_POST['csrf_token'])) {
+        showMessage('Invalid request. Please try again.', 'error');
+        redirect('contact.php');
+    }
+
     $name = sanitizeInput($_POST['name'] ?? '');
     $email = sanitizeInput($_POST['email'] ?? '');
     $phone = sanitizeInput($_POST['phone'] ?? '');
@@ -151,6 +156,8 @@ $pageTitle = 'Contact Us';
                         <label>Message *</label>
                         <textarea name="message" class="input" rows="6" required style="resize: vertical;"><?php echo isset($_POST['message']) ? sanitizeInput($_POST['message']) : ''; ?></textarea>
                     </div>
+
+                    <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
                     
                     <button type="submit" name="submit_contact" class="btn btn-primary" style="width: 100%;">
                         <i class="fas fa-paper-plane"></i> Send Message

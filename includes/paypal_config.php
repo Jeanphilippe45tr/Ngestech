@@ -29,9 +29,11 @@ if (PAYPAL_ENVIRONMENT === 'sandbox') {
 // PayPal Currency
 define('PAYPAL_CURRENCY', 'USD');
 
-// Return URLs
-define('PAYPAL_SUCCESS_URL', SITE_URL . '/paypal_success.php');
-define('PAYPAL_CANCEL_URL', SITE_URL . '/paypal_cancel.php');
+// PayPal SDK URL helper
+function getPayPalSDKUrl($currency = 'USD', $intent = 'capture') {
+    $clientId = PAYPAL_CLIENT_ID;
+    return "https://www.paypal.com/sdk/js?client-id={$clientId}&currency={$currency}&intent={$intent}";
+}
 
 /**
  * Get PayPal Access Token

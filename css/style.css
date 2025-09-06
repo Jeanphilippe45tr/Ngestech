@@ -214,6 +214,17 @@ a { color: inherit; text-decoration: none; }
 .faq-category { padding: 8px 16px; background: white; border: 1px solid #e2e8f0; border-radius: 20px; cursor: pointer; transition: all 0.2s ease; }
 .faq-category.active, .faq-category:hover { background: #0ea5e9; color: white; border-color: #0ea5e9; }
 
+/* Accessories Page Specific */
+.accessories-hero { background: linear-gradient(135deg, #0ea5e9, #0284c7); color: white; padding: 48px 0; text-align: center; }
+.accessories-hero h1 { font-size: 36px; margin: 0 0 16px; font-weight: 700; }
+.accessories-hero p { font-size: 18px; opacity: 0.9; margin: 0; max-width: 600px; margin: 0 auto; }
+.accessories-filter { background: white; border-bottom: 1px solid #e2e8f0; padding: 20px 0; }
+.filter-tabs { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.filter-tab { padding: 8px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 20px; color: #64748b; text-decoration: none; transition: all 0.2s ease; }
+.filter-tab.active, .filter-tab:hover { background: #0ea5e9; color: white; border-color: #0ea5e9; }
+.accessories-products { padding: 48px 0; }
+.accessories-info { background: #f8fafc; padding: 48px 0; border-top: 1px solid #e2e8f0; }
+
 /* Shipping Page Specific */
 .shipping-table table { background: white; }
 .shipping-table th { font-weight: 600; color: #0f172a; }
@@ -225,3 +236,40 @@ a { color: inherit; text-decoration: none; }
 .zone-details { display: flex; justify-content: space-between; align-items: center; }
 .zone-time { font-size: 18px; font-weight: 700; color: #0ea5e9; }
 .zone-features p { margin: 0; color: #64748b; }
+
+/* Brand Page Specific */
+.brand-hero { background: linear-gradient(135deg, #0ea5e9, #0284c7); color: white; padding: 80px 0; }
+.brand-hero .hero-content { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
+.brand-hero h1 { font-size: 48px; margin: 0 0 16px; font-weight: 700; }
+.brand-hero h2 { font-size: 24px; margin: 0 0 20px; opacity: 0.9; font-weight: 400; }
+.brand-hero p { font-size: 18px; opacity: 0.9; margin: 0 0 24px; line-height: 1.6; }
+.brand-story { padding: 80px 0; }
+.brand-story .story-content { display: grid; grid-template-columns: 2fr 1fr; gap: 48px; align-items: center; }
+.brand-story .story-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+.brand-story .stat { text-align: center; padding: 24px; background: #f8fafc; border-radius: 12px; }
+.brand-story .stat h3 { font-size: 36px; margin: 0 0 8px; color: #0ea5e9; font-weight: 700; }
+.brand-story .stat p { margin: 0; color: #64748b; font-weight: 600; }
+.brand-values { background: #f8fafc; padding: 80px 0; }
+.values-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 32px; }
+.value-card { background: white; padding: 32px; border-radius: 12px; text-align: center; }
+.value-icon { width: 80px; height: 80px; background: #e0f2fe; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
+.value-icon i { font-size: 32px; color: #0ea5e9; }
+.value-card h3 { margin: 0 0 16px; font-size: 20px; }
+.value-card p { margin: 0; color: #64748b; line-height: 1.6; }
+.brand-technology { padding: 80px 0; }
+.brand-technology .tech-content { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
+.brand-technology .tech-features { display: grid; gap: 24px; }
+.feature-highlight { background: #f8fafc; padding: 20px; border-radius: 8px; display: flex; align-items: center; gap: 16px; }
+.feature-highlight i { color: #0ea5e9; font-size: 24px; }
+.feature-highlight h4 { margin: 0 0 4px; }
+.feature-highlight p { margin: 0; color: #64748b; font-size: 14px; }
+.brand-awards { background: #f8fafc; padding: 80px 0; }
+.awards-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+.award { background: white; padding: 24px; border-radius: 12px; text-align: center; }
+.award i { color: #f59e0b; font-size: 32px; margin-bottom: 16px; }
+.award h3 { margin: 0 0 8px; font-size: 16px; }
+.award p { margin: 0; color: #64748b; font-size: 14px; }
+.brand-cta { background: linear-gradient(135deg, #0ea5e9, #0284c7); color: white; padding: 80px 0; text-align: center; }
+.brand-cta h2 { font-size: 36px; margin: 0 0 16px; }
+.brand-cta p { font-size: 18px; opacity: 0.9; margin: 0 0 32px; }
+.cta-buttons { display: flex; gap: 16px; justify-content: center; }

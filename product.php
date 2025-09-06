@@ -14,6 +14,7 @@ $pageTitle = sanitizeInput($product['name']);
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="<?php echo generateCSRFToken(); ?>">
   <title><?php echo $pageTitle; ?> - <?php echo SITE_NAME; ?></title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/responsive.css">
@@ -93,11 +94,13 @@ $pageTitle = sanitizeInput($product['name']);
             <p style="color:#475569;"><?php echo nl2br(sanitizeInput($product['description'])); ?></p>
           </div>
         <?php endif; ?>
-        <form method="POST" action="add_to_cart.php" style="display:flex; gap:10px; align-items:center;">
-          <input type="hidden" name="product_id" value="<?php echo $product['id']; ?>">
+        <form method="POST" action="add_to_cart.php" id="add-to-cart-form" style="display:flex; gap:10px; align-items:center;">
+          <input type="hidden" name="item_id" value="<?php echo $product['id']; ?>">
+          <input type="hidden" name="item_type" value="product">
           <input class="input qty" type="number" name="quantity" value="1" min="1">
           <button class="btn btn-primary" type="submit"><i class="fas fa-cart-plus"></i> Add to Cart</button>
         </form>
+        <div id="add-to-cart-message" style="margin-top: 10px;"></div>
       </div>
     </div>
   </main>
@@ -115,5 +118,57 @@ $pageTitle = sanitizeInput($product['name']);
   </footer>
 
   <script src="js/main.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('add-to-cart-form');
+        const messageDiv = document.getElementById('add-to-cart-message');
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(form);
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            formData.append('csrf_token', csrfToken);
+
+            const button = form.querySelector('button[type="submit"]');
+            const originalButtonText = button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
+
+            fetch('add_to_cart.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update cart display in header
+                    const cartCountEl = document.querySelector('.cart-count');
+                    const cartTotalEl = document.querySelector('.cart-total');
+                    if (cartCountEl) cartCountEl.textContent = data.cart_count;
+                    if (cartTotalEl) cartTotalEl.textContent = data.cart_total_formatted;
+
+                    // Show success message
+                    messageDiv.innerHTML = '<div class="alert alert-success">Product added to cart!</div>';
+                    setTimeout(() => messageDiv.innerHTML = '', 3000);
+                } else {
+                    // Show error message
+                    messageDiv.innerHTML = `<div class="alert alert-error">Error: ${data.message}</div>`;
+                    setTimeout(() => messageDiv.innerHTML = '', 5000);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                messageDiv.innerHTML = '<div class="alert alert-error">An unexpected error occurred.</div>';
+                setTimeout(() => messageDiv.innerHTML = '', 5000);
+            })
+            .finally(() => {
+                button.disabled = false;
+                button.innerHTML = originalButtonText;
+            });
+        });
+    });
+  </script>
 </body>
 </html>

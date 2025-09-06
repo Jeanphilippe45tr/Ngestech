@@ -2,30 +2,38 @@
 require_once 'includes/config.php';
 require_once 'includes/functions.php';
 
+// Sanitize and get all filter parameters from GET request
 $q = isset($_GET['q']) ? sanitizeInput($_GET['q']) : '';
 $category = isset($_GET['category']) ? (int)$_GET['category'] : null;
 $brand = isset($_GET['brand']) ? (int)$_GET['brand'] : null;
-$minPrice = isset($_GET['min']) ? (float)$_GET['min'] : null;
-$maxPrice = isset($_GET['max']) ? (float)$_GET['max'] : null;
+$minPrice = isset($_GET['min']) && $_GET['min'] !== '' ? (float)$_GET['min'] : null;
+$maxPrice = isset($_GET['max']) && $_GET['max'] !== '' ? (float)$_GET['max'] : null;
 $page = max(1, isset($_GET['page']) ? (int)$_GET['page'] : 1);
 $limit = PRODUCTS_PER_PAGE;
 $offset = ($page - 1) * $limit;
 
-$categories = getAllCategories();
-$brands = getAllBrands();
-$products = searchProducts($q, $category, $brand, $minPrice, $maxPrice, $limit, $offset);
+// Check if any filters are active
+$isFiltered = !empty($q) || !empty($category) || !empty($brand) || $minPrice !== null || $maxPrice !== null;
 
-// For simplicity, approximate total for pagination
-$db = Database::getInstance();
-$params = [];
-$where = ["status = 'active'"];
-if ($q) { $where[] = "(name LIKE ? OR description LIKE ? OR model LIKE ?)"; $params[] = "%$q%"; $params[] = "%$q%"; $params[] = "%$q%"; }
-if ($category) { $where[] = "category_id = ?"; $params[] = $category; }
-if ($brand) { $where[] = "brand_id = ?"; $params[] = $brand; }
-if ($minPrice !== null) { $where[] = "price >= ?"; $params[] = $minPrice; }
-if ($maxPrice !== null) { $where[] = "price <= ?"; $params[] = $maxPrice; }
-$whereSql = implode(' AND ', $where);
-$total = (int)$db->fetchColumn("SELECT COUNT(*) FROM products WHERE $whereSql", $params);
+$products = [];
+$total = 0;
+
+try {
+    // Get all categories and brands for the filter dropdowns
+    $categories = getAllCategories();
+    $brands = getAllBrands();
+
+    // Call the search function
+    $searchResult = searchProducts($q, $category, $brand, $minPrice, $maxPrice, $limit, $offset);
+    $products = $searchResult['products'];
+    $total = $searchResult['total'];
+} catch (Exception $e) {
+    // Log the error and display a friendly message
+    error_log('Products page error: ' . $e->getMessage());
+    showMessage('An error occurred while trying to load products. Please try again later.', 'error');
+}
+
+// Calculate total pages for pagination
 $totalPages = max(1, (int)ceil($total / $limit));
 
 $pageTitle = 'Products';
@@ -35,6 +43,7 @@ $pageTitle = 'Products';
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="csrf-token" content="<?php echo generateCSRFToken(); ?>">
   <title><?php echo $pageTitle; ?> - <?php echo SITE_NAME; ?></title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/responsive.css">
@@ -102,9 +111,18 @@ $pageTitle = 'Products';
       </form>
     </div>
 
+    <div id="add-to-cart-message" style="margin-bottom: 15px;"></div>
+
     <div class="products-grid">
-      <?php if (!$products): ?>
-        <p>No products found.</p>
+      <?php if (empty($products)): ?>
+        <div style="text-align: center; padding: 40px; background: white; border-radius: 12px; border: 1px solid #e2e8f0; grid-column: 1 / -1;">
+            <i class="fas fa-search" style="font-size: 48px; color: #cbd5e1; margin-bottom: 16px;"></i>
+            <h3><?php echo $isFiltered ? 'No Products Match Your Filters' : 'No Products Found'; ?></h3>
+            <p><?php echo $isFiltered ? 'Try adjusting or clearing your filters to see more results.' : 'Check back later for more products.'; ?></p>
+            <?php if ($isFiltered): ?>
+                <a href="products.php" class="btn btn-primary">Clear Filters</a>
+            <?php endif; ?>
+        </div>
       <?php else: ?>
         <?php foreach ($products as $p): ?>
           <div class="product-card">
@@ -114,8 +132,13 @@ $pageTitle = 'Products';
               </a>
               <?php if ($p['sale_price']): ?><span class="sale-badge">Sale</span><?php endif; ?>
               <div class="product-actions">
-                <button class="btn-add-to-cart" data-product-id="<?php echo $p['id']; ?>"><i class="fas fa-cart-plus"></i></button>
-                <a class="btn-quick-view" href="product.php?id=<?php echo $p['id']; ?>"><i class="fas fa-eye"></i></a>
+                <form class="add-to-cart-form">
+                    <input type="hidden" name="item_id" value="<?php echo $p['id']; ?>">
+                    <input type="hidden" name="item_type" value="product">
+                    <input type="hidden" name="quantity" value="1">
+                    <button type="submit" title="Add to Cart"><i class="fas fa-cart-plus"></i></button>
+                </form>
+                <a class="btn-quick-view" href="product.php?id=<?php echo $p['id']; ?>" title="Quick View"><i class="fas fa-eye"></i></a>
               </div>
             </div>
             <div class="product-info">
@@ -138,9 +161,13 @@ $pageTitle = 'Products';
 
     <?php if ($totalPages > 1): ?>
     <div class="pagination" style="display:flex; gap:8px; justify-content:center; margin:16px 0;">
+      <?php 
+        // Prepare base URL for pagination links, preserving existing filters
+        $queryParams = $_GET;
+      ?>
       <?php for ($i=1; $i<=$totalPages; $i++): ?>
-        <?php $params = $_GET; $params['page']=$i; $url = 'products.php?'.http_build_query($params); ?>
-        <a class="btn <?php echo $i===$page?'btn-primary':'btn-outline'; ?>" href="<?php echo $url; ?>"><?php echo $i; ?></a>
+        <?php $queryParams['page'] = $i; ?>
+        <a class="btn <?php echo $i===$page?'btn-primary':'btn-outline'; ?>" href="?<?php echo http_build_query($queryParams); ?>"><?php echo $i; ?></a>
       <?php endfor; ?>
     </div>
     <?php endif; ?>
@@ -159,5 +186,55 @@ $pageTitle = 'Products';
   </footer>
 
   <script src="js/main.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const forms = document.querySelectorAll('.add-to-cart-form');
+        const messageDiv = document.getElementById('add-to-cart-message');
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+        forms.forEach(form => {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                const formData = new FormData(form);
+                formData.append('csrf_token', csrfToken);
+
+                const button = form.querySelector('button[type="submit"]');
+                const originalButtonIcon = button.innerHTML;
+                button.disabled = true;
+                button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+                fetch('add_to_cart.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const cartCountEl = document.querySelector('.cart-count');
+                        const cartTotalEl = document.querySelector('.cart-total');
+                        if (cartCountEl) cartCountEl.textContent = data.cart_count;
+                        if (cartTotalEl) cartTotalEl.textContent = data.cart_total_formatted;
+
+                        messageDiv.innerHTML = '<div class="alert alert-success">Product added to cart!</div>';
+                        setTimeout(() => messageDiv.innerHTML = '', 3000);
+                    } else {
+                        messageDiv.innerHTML = `<div class="alert alert-error">Error: ${data.message}</div>`;
+                        setTimeout(() => messageDiv.innerHTML = '', 5000);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    messageDiv.innerHTML = '<div class="alert alert-error">An unexpected error occurred.</div>';
+                    setTimeout(() => messageDiv.innerHTML = '', 5000);
+                })
+                .finally(() => {
+                    button.disabled = false;
+                    button.innerHTML = originalButtonIcon;
+                });
+            });
+        });
+    });
+  </script>
 </body>
 </html>

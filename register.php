@@ -8,6 +8,11 @@ if (isLoggedIn()) {
 }
 
 if ($_POST) {
+    if (!validateCSRFToken($_POST['csrf_token'])) {
+        showMessage('Invalid request. Please try again.', 'error');
+        redirect('register.php');
+    }
+
     $firstName = sanitizeInput($_POST['first_name'] ?? '');
     $lastName = sanitizeInput($_POST['last_name'] ?? '');
     $email = sanitizeInput($_POST['email'] ?? '');
@@ -132,6 +137,8 @@ $pageTitle = 'Register';
                     <label>Confirm Password</label>
                     <input type="password" name="confirm_password" class="input" required>
                 </div>
+
+                <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
                 
                 <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 16px;">
                     <i class="fas fa-user-plus"></i> Create Account

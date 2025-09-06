@@ -10,6 +10,11 @@ if (isLoggedIn()) {
 $redirect = isset($_GET['redirect']) ? sanitizeInput($_GET['redirect']) : 'index.php';
 
 if ($_POST) {
+    if (!validateCSRFToken($_POST['csrf_token'])) {
+        showMessage('Invalid request. Please try again.', 'error');
+        redirect('login.php');
+    }
+
     $email = sanitizeInput($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
     
@@ -84,6 +89,8 @@ $pageTitle = 'Login';
                     <input type="password" name="password" class="input" required>
                 </div>
                 
+                <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
+
                 <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 16px;">
                     <i class="fas fa-sign-in-alt"></i> Login
                 </button>

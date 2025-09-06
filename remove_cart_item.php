@@ -9,6 +9,11 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
+if (!validateCSRFToken($_POST['csrf_token'] ?? '')) {
+    echo json_encode(['success' => false, 'message' => 'Invalid request token.']);
+    exit;
+}
+
 $cartId = isset($_POST['cart_id']) ? (int)$_POST['cart_id'] : 0;
 
 if ($cartId <= 0) {

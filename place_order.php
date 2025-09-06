@@ -9,6 +9,11 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     redirect('checkout.php');
 }
 
+if (!validateCSRFToken($_POST['csrf_token'] ?? '')) {
+    showMessage('Invalid request. Please try again.', 'error');
+    redirect('checkout.php');
+}
+
 $userId = $_SESSION['user_id'];
 $cartItems = getCartItems($userId);
 
@@ -19,6 +24,25 @@ if (empty($cartItems)) {
 
 try {
     $db = Database::getInstance();
+
+    // --- Stock Check before processing ---
+    $insufficientStock = [];
+    foreach ($cartItems as $item) {
+        if ($item['item_type'] === 'product') {
+            $product = $db->fetchOne("SELECT name, stock_quantity FROM products WHERE id = ?", [$item['item_id']]);
+            if ($product && $product['stock_quantity'] < $item['quantity']) {
+                $insufficientStock[] = "Not enough stock for {$product['name']} (requested: {$item['quantity']}, available: {$product['stock_quantity']}).";
+            }
+        }
+        // NOTE: Accessories are assumed to have infinite stock for this example.
+        // A real-world application would have a stock system for accessories too.
+    }
+
+    if (!empty($insufficientStock)) {
+        $errorMsg = "Could not place order due to stock issues:<br>" . implode("<br>", $insufficientStock);
+        showMessage($errorMsg, 'error');
+        redirect('cart.php');
+    }
     
     // Calculate totals
     $cartTotal = getCartTotal($userId);
@@ -59,15 +83,21 @@ try {
         'payment_status' => 'pending'
     ]);
     
-    // Add order items
+    // Add order items and update stock
     foreach ($cartItems as $item) {
         $db->insert('order_items', [
             'order_id' => $orderId,
-            'product_id' => $item['product_id'],
+            'item_id' => $item['item_id'],
+            'item_type' => $item['item_type'],
             'quantity' => $item['quantity'],
             'price' => $item['price'],
-            'total' => $item['price'] * $item['quantity']
+            'total' => (is_numeric($item['price']) ? $item['price'] : 0) * $item['quantity']
         ]);
+
+        // Decrement stock for products
+        if ($item['item_type'] === 'product') {
+            $db->query("UPDATE products SET stock_quantity = stock_quantity - ? WHERE id = ?", [$item['quantity'], $item['item_id']]);
+        }
     }
     
     // Clear cart
@@ -77,13 +107,19 @@ try {
     
     // Handle different payment methods
     if ($paymentMethod === 'paypal') {
-        // Create PayPal payment
+        // For PayPal, we use the JavaScript SDK integration
+        // The actual payment processing happens via AJAX in checkout.php
+        // This fallback is for non-JavaScript users
+        
+        require_once 'includes/PayPalService.php';
+        $paypalService = new PayPalService();
+        
         $description = "Order $orderNumber - " . SITE_NAME;
-        $paypalResult = createPayPalPayment($grandTotal, PAYPAL_CURRENCY, $description);
+        $paypalResult = $paypalService->createOrder($grandTotal, PAYPAL_CURRENCY, $description, $orderNumber);
         
         if ($paypalResult['success']) {
             // Store payment info for later completion
-            $_SESSION['paypal_payment_id'] = $paypalResult['payment_id'];
+            $_SESSION['paypal_payment_id'] = $paypalResult['order_id'];
             $_SESSION['order_id'] = $orderId;
             $_SESSION['order_number'] = $orderNumber;
             

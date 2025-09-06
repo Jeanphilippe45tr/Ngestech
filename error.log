@@ -1,1 +1,42 @@
 [28-Aug-2025 21:37:22 America/New_York] Database connection failed: SQLSTATE[HY000] [2002] No such file or directory
+[01-Sep-2025 19:28:03 America/New_York] PHP Warning:  session_start(): Session cannot be started after headers have already been sent in C:\Users\Admin\Desktop\Ngestech-main\includes\config.php on line 64
+[01-Sep-2025 19:28:03 America/New_York] PHP Stack trace:
+[01-Sep-2025 19:28:03 America/New_York] PHP   1. {main}() C:\Users\Admin\Desktop\Ngestech-main\test_login.php:0
+[01-Sep-2025 19:28:03 America/New_York] PHP   2. require_once() C:\Users\Admin\Desktop\Ngestech-main\test_login.php:22
+[01-Sep-2025 19:28:03 America/New_York] PHP   3. session_start() C:\Users\Admin\Desktop\Ngestech-main\includes\config.php:64
+[01-Sep-2025 19:28:07 America/New_York] Database connection failed: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[01-Sep-2025 22:05:44 America/New_York] PHP Deprecated:  trim(): Passing null to parameter #1 ($string) of type string is deprecated in C:\Users\Admin\Desktop\Ngestech-main\includes\functions.php on line 302
+[01-Sep-2025 22:05:44 America/New_York] PHP Stack trace:
+[01-Sep-2025 22:05:44 America/New_York] PHP   1. {main}() C:\Users\Admin\Desktop\Ngestech-main\index.php:0
+[01-Sep-2025 22:05:44 America/New_York] PHP   2. getProductImageUrl($imagePath = NULL) C:\Users\Admin\Desktop\Ngestech-main\index.php:163
+[01-Sep-2025 22:05:44 America/New_York] PHP   3. trim($string = NULL) C:\Users\Admin\Desktop\Ngestech-main\includes\functions.php:302
+[01-Sep-2025 22:05:44 America/New_York] PHP Deprecated:  trim(): Passing null to parameter #1 ($string) of type string is deprecated in C:\Users\Admin\Desktop\Ngestech-main\includes\functions.php on line 302
+[01-Sep-2025 22:05:44 America/New_York] PHP Stack trace:
+[01-Sep-2025 22:05:44 America/New_York] PHP   1. {main}() C:\Users\Admin\Desktop\Ngestech-main\index.php:0
+[01-Sep-2025 22:05:44 America/New_York] PHP   2. getProductImageUrl($imagePath = NULL) C:\Users\Admin\Desktop\Ngestech-main\index.php:163
+[01-Sep-2025 22:05:44 America/New_York] PHP   3. trim($string = NULL) C:\Users\Admin\Desktop\Ngestech-main\includes\functions.php:302
+[01-Sep-2025 22:05:44 America/New_York] PHP Deprecated:  trim(): Passing null to parameter #1 ($string) of type string is deprecated in C:\Users\Admin\Desktop\Ngestech-main\includes\functions.php on line 302
+[01-Sep-2025 22:05:44 America/New_York] PHP Stack trace:
+[01-Sep-2025 22:05:44 America/New_York] PHP   1. {main}() C:\Users\Admin\Desktop\Ngestech-main\index.php:0
+[01-Sep-2025 22:05:44 America/New_York] PHP   2. getProductImageUrl($imagePath = NULL) C:\Users\Admin\Desktop\Ngestech-main\index.php:163
+[01-Sep-2025 22:05:44 America/New_York] PHP   3. trim($string = NULL) C:\Users\Admin\Desktop\Ngestech-main\includes\functions.php:302
+[01-Sep-2025 22:05:55 America/New_York] PHP Deprecated:  trim(): Passing null to parameter #1 ($string) of type string is deprecated in C:\Users\Admin\Desktop\Ngestech-main\includes\functions.php on line 302
+[01-Sep-2025 22:05:55 America/New_York] PHP Stack trace:
+[01-Sep-2025 22:05:55 America/New_York] PHP   1. {main}() C:\Users\Admin\Desktop\Ngestech-main\product.php:0
+[01-Sep-2025 22:05:55 America/New_York] PHP   2. getProductImageUrl($imagePath = NULL) C:\Users\Admin\Desktop\Ngestech-main\product.php:57
+[01-Sep-2025 22:05:55 America/New_York] PHP   3. trim($string = NULL) C:\Users\Admin\Desktop\Ngestech-main\includes\functions.php:302
+[01-Sep-2025 22:06:02 America/New_York] PHP Deprecated:  trim(): Passing null to parameter #1 ($string) of type string is deprecated in C:\Users\Admin\Desktop\Ngestech-main\includes\functions.php on line 302
+[01-Sep-2025 22:06:02 America/New_York] PHP Stack trace:
+[01-Sep-2025 22:06:02 America/New_York] PHP   1. {main}() C:\Users\Admin\Desktop\Ngestech-main\index.php:0
+[01-Sep-2025 22:06:02 America/New_York] PHP   2. getProductImageUrl($imagePath = NULL) C:\Users\Admin\Desktop\Ngestech-main\index.php:163
+[01-Sep-2025 22:06:02 America/New_York] PHP   3. trim($string = NULL) C:\Users\Admin\Desktop\Ngestech-main\includes\functions.php:302
+[01-Sep-2025 22:06:02 America/New_York] PHP Deprecated:  trim(): Passing null to parameter #1 ($string) of type string is deprecated in C:\Users\Admin\Desktop\Ngestech-main\includes\functions.php on line 302
+[01-Sep-2025 22:06:02 America/New_York] PHP Stack trace:
+[01-Sep-2025 22:06:02 America/New_York] PHP   1. {main}() C:\Users\Admin\Desktop\Ngestech-main\index.php:0
+[01-Sep-2025 22:06:02 America/New_York] PHP   2. getProductImageUrl($imagePath = NULL) C:\Users\Admin\Desktop\Ngestech-main\index.php:163
+[01-Sep-2025 22:06:02 America/New_York] PHP   3. trim($string = NULL) C:\Users\Admin\Desktop\Ngestech-main\includes\functions.php:302
+[01-Sep-2025 22:06:02 America/New_York] PHP Deprecated:  trim(): Passing null to parameter #1 ($string) of type string is deprecated in C:\Users\Admin\Desktop\Ngestech-main\includes\functions.php on line 302
+[01-Sep-2025 22:06:02 America/New_York] PHP Stack trace:
+[01-Sep-2025 22:06:02 America/New_York] PHP   1. {main}() C:\Users\Admin\Desktop\Ngestech-main\index.php:0
+[01-Sep-2025 22:06:02 America/New_York] PHP   2. getProductImageUrl($imagePath = NULL) C:\Users\Admin\Desktop\Ngestech-main\index.php:163
+[01-Sep-2025 22:06:02 America/New_York] PHP   3. trim($string = NULL) C:\Users\Admin\Desktop\Ngestech-main\includes\functions.php:302

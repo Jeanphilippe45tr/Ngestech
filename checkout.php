@@ -118,8 +118,14 @@ $pageTitle = 'Checkout';
           <textarea name="notes" class="input" rows="4" placeholder="Notes about your order, e.g. special delivery instructions"></textarea>
         </div>
 
-        <button class="btn btn-primary" type="submit"><i class="fas fa-lock"></i> Place Order</button>
+        <div id="traditional-checkout-form">
+          <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
+          <button class="btn btn-primary" type="submit"><i class="fas fa-lock"></i> Place Order</button>
+        </div>
       </form>
+      
+      <!-- PayPal Button Container -->
+      <div id="paypal-button-container" style="display: none; margin-top: 16px;"></div>
 
       <aside class="summary">
         <h3>Order Summary</h3>
@@ -152,12 +158,116 @@ $pageTitle = 'Checkout';
     </div>
   </footer>
 
+  <!-- PayPal JavaScript SDK -->
+  <script src="<?php echo getPayPalSDKUrl(PAYPAL_CURRENCY, 'capture'); ?>"></script>
+  
   <script>
     // Toggle visual active state for selected payment method
     document.addEventListener('change', (e) => {
       if (e.target.name === 'payment_method') {
         document.querySelectorAll('.pmethod').forEach(el => el.classList.remove('active'));
         e.target.closest('.pmethod').classList.add('active');
+        
+        // Show/hide PayPal button based on selection
+        const paypalContainer = document.getElementById('paypal-button-container');
+        const traditionalForm = document.getElementById('traditional-checkout-form');
+        
+        if (e.target.value === 'paypal') {
+          paypalContainer.style.display = 'block';
+          traditionalForm.style.display = 'none';
+          initializePayPalButton();
+        } else {
+          paypalContainer.style.display = 'none';
+          traditionalForm.style.display = 'block';
+        }
+      }
+    });
+    
+    // Initialize PayPal button
+    function initializePayPalButton() {
+      // Clear existing button
+      document.getElementById('paypal-button-container').innerHTML = '';
+      
+      if (typeof paypal === 'undefined') {
+        console.error('PayPal SDK not loaded');
+        return;
+      }
+      
+      paypal.Buttons({
+        createOrder: function(data, actions) {
+          return fetch('api/paypal_create_order.php', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              amount: <?php echo $grandTotal; ?>,
+              currency: '<?php echo PAYPAL_CURRENCY; ?>'
+            })
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              return data.order_id;
+            } else {
+              throw new Error(data.error || 'Failed to create order');
+            }
+          })
+          .catch(err => {
+            console.error('Error creating PayPal order:', err);
+            alert('Error creating PayPal order: ' + err.message);
+          });
+        },
+        
+        onApprove: function(data, actions) {
+          return fetch('api/paypal_capture_order.php', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              orderID: data.orderID
+            })
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              // Redirect to success page
+              window.location.href = data.redirect_url;
+            } else {
+              throw new Error(data.error || 'Failed to capture payment');
+            }
+          })
+          .catch(err => {
+            console.error('Error capturing PayPal payment:', err);
+            alert('Error processing payment: ' + err.message);
+          });
+        },
+        
+        onError: function(err) {
+          console.error('PayPal error:', err);
+          alert('PayPal error occurred. Please try again or use a different payment method.');
+        },
+        
+        onCancel: function(data) {
+          console.log('PayPal payment cancelled', data);
+          alert('Payment was cancelled.');
+        },
+        
+        style: {
+          layout: 'vertical',
+          color: 'blue',
+          shape: 'rect',
+          label: 'paypal'
+        }
+      }).render('#paypal-button-container');
+    }
+    
+    // Auto-select PayPal if it's the only checked option
+    document.addEventListener('DOMContentLoaded', function() {
+      const paypalRadio = document.querySelector('input[value="paypal"]');
+      if (paypalRadio && paypalRadio.checked) {
+        paypalRadio.dispatchEvent(new Event('change'));
       }
     });
   </script>
