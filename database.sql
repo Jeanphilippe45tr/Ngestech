@@ -232,3 +232,17 @@ INSERT INTO products (name, model, brand_id, category_id, price, description, ho
 ('Honda BF90DK2XB', 'BF90', 3, 2, 9999.00, 'Advanced 90HP 4-stroke outboard with VTEC technology', 90, '4-stroke', 'gasoline', 'extra-long', 168.0, 5, 'HON-BF90-DK2', FALSE),
 ('Suzuki DF140APX', 'DF140A', 4, 3, 14299.00, 'High-performance 140HP 4-stroke outboard motor', 140, '4-stroke', 'gasoline', 'extra-long', 188.0, 3, 'SUZ-DF140A-PX', TRUE),
 ('Tohatsu MFS15C', 'MFS15C', 5, 1, 2199.00, 'Compact and lightweight 15HP 4-stroke outboard', 15, '4-stroke', 'gasoline', 'short', 45.0, 20, 'TOH-MFS15C-S', FALSE);
+
+
+-- Add status field to users table for user deactivation functionality
+-- Run this SQL command to add the status field to your existing users table
+
+ALTER TABLE users 
+ADD COLUMN status ENUM('active', 'inactive', 'suspended') DEFAULT 'active' 
+AFTER role;
+
+-- Update any existing users to be active by default
+UPDATE users SET status = 'active' WHERE status IS NULL;
+
+-- Add an index for better performance when filtering by status
+ALTER TABLE users ADD INDEX idx_user_status (status);
